@@ -48,11 +48,8 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 	/*************************************************/
 	else if (!strcmp(cmd, "pwd")) 
 	{
-        if (num_arg != 0)
-          {
-            illegal_cmd = true;
-           }
-         else
+        (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
+         if(!illegal_cmd)
           {
             char curr_dir[MAX_LINE_SIZE];
             getcwd(curr_dir, MAX_LINE_SIZE);
@@ -72,9 +69,13 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
  		
 	}
 	/*************************************************/
-	else if (!strcmp(cmd, "showpid")) 
+	else if (!strcmp(cmd, "showpid"))
 	{
-		
+        (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
+        if (!illegal_cmd)
+        {
+            cout << "smash pid is " << getpid() << endl;
+        }
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "fg")) 
