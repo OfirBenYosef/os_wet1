@@ -16,6 +16,9 @@ class job{
         char* status;
 }
 //**************************************************************************************
+
+static char OLDPWD=NULL;
+
 int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 {
 	char* cmd; 
@@ -42,7 +45,37 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 /*************************************************/
 	if (!strcmp(cmd, "cd") ) 
 	{
-		
+		(num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
+        if(num_arg > 1){
+        	illegal_cmd = true);
+			cout << "smash error: cd: too many arguments" << endl;
+        }
+        else{
+			illegal_cmd = false);
+        }
+        
+        if(!illegal_cmd)
+          {
+        	char* curr_dir[MAX_LINE_SIZE];
+        	if(args[1] == "-"){
+        		if(!OLDPWD){
+        			cout << "smash error: cd: OLDPWD not set" << endl;
+        		}
+        		else{
+        			*curr_dir=OLDPWD;
+        			getcwd(OLDPWD, MAX_LINE_SIZE);
+        			chdir(curr_dir);
+        			cout << curr_dir << endl;
+        		}
+        	}
+        	else{
+        		getcwd(curr_dir, MAX_LINE_SIZE);
+        		strcat(curr_dir,(const char*) arg[1]);
+        		chdir(curr_dir);
+        		cout << curr_dir << endl;
+        	}
+           
+          }
 	} 
 	
 	/*************************************************/
@@ -56,6 +89,36 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
             cout << curr_dir << endl;
           }
 	}
+	/*************************************************/
+	else if (!strcmp(cmd, "diff"))
+	{
+		  (num_arg != 2)? (illegal_cmd = true) : (illegal_cmd = false);
+		   if(!illegal_cmd)
+		   {
+			 FILE *file1=fopen(*arg[1],"r");
+			 FILE *file2=fopen(*arg[2],"r");
+			 if (file1 == NULL || file2 == NULL){
+			     printf("Error : Files not open");
+			     exit(0);
+			 }
+			 char ch1 = getc(file1);
+			 char ch2 = getc(file2);
+			 while (ch1 != EOF && ch2 != EOF){
+				 if (ch1 != ch2){
+					 cout << "1"<< endl; 
+					 break;
+				 }
+				 ch1 = getc(file1);
+				 ch2 = getc(file2);
+			 }
+			 if (ch1 == EOF && ch2 == EOF){
+				 cout << "0"<< endl;
+			 }
+			 else cout << "1"<< endl;
+			        
+		   }
+	}
+	/*************************************************/
 	
 	/*************************************************/
 	else if (!strcmp(cmd, "mkdir"))
