@@ -7,17 +7,18 @@
 // Parameters: pointer to jobs, command string
 // Returns: 0 - success,1 - failure
 //**************************************************************************************
+using namespace std;
 class job{
         public:
-        unsigned int pid = o;
-        unsigned int job_id = o;
+        unsigned int pid;
+        unsigned int job_id;
         unsigned int elp_sec;
         char* command;
         char* status;
-}
+};
 //**************************************************************************************
 
-static char OLDPWD=NULL;
+static char OLDPWD = NULL;
 
 int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 {
@@ -47,47 +48,46 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 	{
 		(num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
         if(num_arg > 1){
-        	illegal_cmd = true);
-			cout << "smash error: cd: too many arguments" << endl;
+        	illegal_cmd = true;
+           cout << "smash error: cd: too many arguments" << endl;
         }
         else{
-			illegal_cmd = false);
+            illegal_cmd = false;
         }
-        
-        if(!illegal_cmd)
-          {
-        	char* curr_dir[MAX_LINE_SIZE];
-        	if(args[1] == "-"){
-        		if(!OLDPWD){
-        			cout << "smash error: cd: OLDPWD not set" << endl;
-        		}
-        		else{
-        			*curr_dir=OLDPWD;
-        			getcwd(OLDPWD, MAX_LINE_SIZE);
-        			chdir(curr_dir);
-        			cout << curr_dir << endl;
-        		}
-        	}
-        	else{
-        		getcwd(curr_dir, MAX_LINE_SIZE);
-        		strcat(curr_dir,(const char*) arg[1]);
-        		chdir(curr_dir);
-        		cout << curr_dir << endl;
-        	}
-           
-          }
+            if(!illegal_cmd)
+              {
+                char* curr_dir[MAX_LINE_SIZE];
+                if(args[1] == "-"){
+                    if(!OLDPWD){
+                        cout << "smash error: cd: OLDPWD not set" <<endl;
+                    }
+                    else{
+                        *curr_dir = &OLDPWD;
+                        getcwd(OLDPWD, MAX_LINE_SIZE);
+                        chdir(curr_dir);
+                        cout << curr_dir << endl;
+                    }
+                }
+                else{
+                    getcwd(curr_dir, MAX_LINE_SIZE);
+                    strcat(curr_dir,(const char*) arg[1]);
+                    chdir(curr_dir);
+                    cout << curr_dir << endl;
+                }
+               
+              }
 	} 
 	
 	/*************************************************/
 	else if (!strcmp(cmd, "pwd")) 
 	{
-        (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
+       /* (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
          if(!illegal_cmd)
           {
             char curr_dir[MAX_LINE_SIZE];
             getcwd(curr_dir, MAX_LINE_SIZE);
             cout << curr_dir << endl;
-          }
+          }*/
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "diff"))
@@ -95,8 +95,8 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 		  (num_arg != 2)? (illegal_cmd = true) : (illegal_cmd = false);
 		   if(!illegal_cmd)
 		   {
-			 FILE *file1=fopen(*arg[1],"r");
-			 FILE *file2=fopen(*arg[2],"r");
+			 FILE *file1 = fopen(*args[1],"r");
+			 FILE *file2 = fopen(*args[2],"r");
 			 if (file1 == NULL || file2 == NULL){
 			     printf("Error : Files not open");
 			     exit(0);
@@ -195,7 +195,7 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString)
 					your code
 					*/
 			
-			default:
+        default:;
                 	// Add your code here
 					
 					/* 

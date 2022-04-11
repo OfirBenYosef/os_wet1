@@ -7,10 +7,13 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/types.h>
+#include <iostream>
 #include <sys/wait.h>
+#include <unistd.h>
 #define MAX_LINE_SIZE 80
 #define MAX_ARG 20
-typedef enum { FALSE , TRUE } bool;
+
+typedef enum { FALSE , TRUE }; bool;
 int ExeComp(char* lineSize);
 int BgCmd(char* lineSize, void* jobs);
 int ExeCmd(void* jobs, char* lineSize, char* cmdString);
