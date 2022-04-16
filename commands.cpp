@@ -33,16 +33,16 @@ int ExeCmd( char* lineSize, char* cmdString)
  
 	}
     while(args[1]){
-        if(args[1]=='&' || arg[2]=='&'){
-            job job;
+        if(args[1] == "&" || args[2] =="&"){
+            Job job;
             job.pid = getpid();
-            job.job_id = job_counter++;
-            job.elp_sec = time(&seconds);
-            job.command ='';
+            job.job_id = jobs_counter++;
+            //job.elp_sec = time();
+            //job.command ='';
+            jobs.push_back(job);
             break;
         }
         args[1]++;
-        jobs_vec.pushbak(job);
     }
 /*************************************************/
 // Built in Commands PLEASE NOTE NOT ALL REQUIRED
