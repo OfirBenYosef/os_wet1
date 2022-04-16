@@ -8,19 +8,12 @@
 // Returns: 0 - success,1 - failure
 //**************************************************************************************
 using namespace std;
-class job{
-        public:
-        unsigned int pid;
-        unsigned int job_id;
-        unsigned int elp_sec;
-        char* command;
-        char* status;
-};
+
 //**************************************************************************************
+static char OLDPWD[MAX_LINE_SIZE];
+static unsigned int jobs_counter = 1;
 
-static char OLDPWD = NULL;
-
-int ExeCmd(void* jobs, char* lineSize, char* cmdString)
+int ExeCmd( char* lineSize, char* cmdString)
 {
 	char* cmd; 
 	char* args[MAX_ARG];
@@ -39,6 +32,18 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 			num_arg++; 
  
 	}
+    while(args[1]){
+        if(args[1]=='&' || arg[2]=='&'){
+            job job;
+            job.pid = getpid();
+            job.job_id = job_counter++;
+            job.elp_sec = time(&seconds);
+            job.command ='';
+            break;
+        }
+        args[1]++;
+        jobs_vec.pushbak(job);
+    }
 /*************************************************/
 // Built in Commands PLEASE NOTE NOT ALL REQUIRED
 // ARE IN THIS CHAIN OF IF COMMANDS. PLEASE ADD
@@ -56,13 +61,13 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
         }
             if(!illegal_cmd)
               {
-                char* curr_dir[MAX_LINE_SIZE];
+                char curr_dir[MAX_LINE_SIZE];
                 if(args[1] == "-"){
                     if(!OLDPWD){
-                        cout << "smash error: cd: OLDPWD not set" <<endl;
+                        cout << "smash error: cd:" << OLDPWD <<"not set" <<endl;
                     }
                     else{
-                        *curr_dir = &OLDPWD;
+                    	strcpy(curr_dir, OLDPWD);
                         getcwd(OLDPWD, MAX_LINE_SIZE);
                         chdir(curr_dir);
                         cout << curr_dir << endl;
@@ -70,7 +75,7 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
                 }
                 else{
                     getcwd(curr_dir, MAX_LINE_SIZE);
-                    strcat(curr_dir,(const char*) arg[1]);
+                    strcat(curr_dir,(const char*) args[1]);
                     chdir(curr_dir);
                     cout << curr_dir << endl;
                 }
@@ -95,8 +100,8 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 		  (num_arg != 2)? (illegal_cmd = true) : (illegal_cmd = false);
 		   if(!illegal_cmd)
 		   {
-			 FILE *file1 = fopen(*args[1],"r");
-			 FILE *file2 = fopen(*args[2],"r");
+			 FILE *file1 = fopen(args[1],"r");
+			 FILE *file2 = fopen(args[2],"r");
 			 if (file1 == NULL || file2 == NULL){
 			     printf("Error : Files not open");
 			     exit(0);
@@ -129,7 +134,13 @@ int ExeCmd(void* jobs, char* lineSize, char* cmdString)
 	
 	else if (!strcmp(cmd, "jobs")) 
 	{
- 		
+        vector<jobs>::iterator it;
+        it=jobs.begin();
+        while(it) {
+            it.print();
+            it++;
+        }
+
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "showpid"))
@@ -229,7 +240,7 @@ int ExeComp(char* lineSize)
 // Parameters: command string, pointer to jobs
 // Returns: 0- BG command -1- if not
 //**************************************************************************************
-int BgCmd(char* lineSize, void* jobs)
+int BgCmd(char* lineSize)
 {
 
 	char* Command;
