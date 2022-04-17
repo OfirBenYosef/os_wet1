@@ -15,11 +15,13 @@ static unsigned int jobs_counter = 1;
 
 int ExeCmd( char* lineSize, char* cmdString)
 {
-	char* cmd; 
+	char* cmd;
 	char* args[MAX_ARG];
 	char pwd[MAX_LINE_SIZE];
 	char* delimiters = " \t\n";  
 	int i = 0, num_arg = 0;
+    pid_t w;
+    int status;
 	bool illegal_cmd = FALSE; // illegal command
     	cmd = strtok(lineSize, delimiters);
 	if (cmd == NULL)
@@ -162,7 +164,65 @@ int ExeCmd( char* lineSize, char* cmdString)
 	/*************************************************/
 	else if (!strcmp(cmd, "fg")) 
 	{
-		
+        vector<Job>::iterator it;
+        if(num_arg > 1){ //maybe need to add more conditions
+            cout << "smash error: fg: invalid arguments" << endl;
+        }
+        else{
+            if(num_arg == 1){
+                int i = 0;
+                for(vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++)
+                {
+                    if(it->pid == *args[1]){
+                        it->print();
+                        do {
+                            w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
+                            if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
+
+
+                            if (WIFEXITED(status)) {
+                                printf("exited, status=%d\n", WEXITSTATUS(status));
+                            } else if (WIFSIGNALED(status)) {
+                                printf("killed by signal %d\n", WTERMSIG(status));
+                            } else if (WIFSTOPPED(status)) {
+                                printf("stopped by signal %d\n", WSTOPSIG(status));
+                            } else if (WIFCONTINUED(status)) {
+                                printf("continued\n");
+                            }
+                        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+                        exit(EXIT_SUCCESS);
+                        jobs.erase(it);
+                        break;
+                    }
+                }
+            }
+
+            else if(num_arg == 0){
+                    if(!jobs.size()) {
+                        cout << "smash error: fg: jobs list is empty" << endl;
+                    }
+                    else{
+                        it = jobs.end();
+                        do {
+                            w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
+                            if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
+
+                            if (WIFEXITED(status)) {
+                                printf("exited, status=%d\n", WEXITSTATUS(status));
+                            } else if (WIFSIGNALED(status)) {
+                                printf("killed by signal %d\n", WTERMSIG(status));
+                            } else if (WIFSTOPPED(status)) {
+                                printf("stopped by signal %d\n", WSTOPSIG(status));
+                            } else if (WIFCONTINUED(status)) {
+                                printf("continued\n");
+                            }
+                        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+                        exit(EXIT_SUCCESS);
+                        jobs.erase(jobs.end());
+                    }
+            }
+
+        }
 	} 
 	/*************************************************/
 	else if (!strcmp(cmd, "bg")) 
