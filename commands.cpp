@@ -134,13 +134,21 @@ int ExeCmd( char* lineSize, char* cmdString)
 	
 	else if (!strcmp(cmd, "jobs")) 
 	{
-        vector<jobs>::iterator it;
+        for(vector<Job>::iterator   it = jobs.begin();
+            it != jobs.end();
+            it++ )
+        {
+            it->print();
+
+        }
+        /*
+        vector<Job>::iterator it;
         it=jobs.begin();
-        while(it) {
-            it.print();
+        while(it =! jobs.end()) {
+            it->print();
             it++;
         }
-
+*/
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "showpid"))

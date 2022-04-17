@@ -23,7 +23,11 @@ class Job{
         unsigned int elp_sec;
         char* command;
         char* status;
+        void print();
 };
+void Job::print(){
+    std::cout <<'['<<job_id<<']'<<command<<':'<<pid<<elp_sec<<'secs'<< std::endl;
+}
 
 extern std::vector<Job> jobs;
 //********************************************************************
