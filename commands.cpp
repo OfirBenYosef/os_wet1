@@ -8,6 +8,15 @@
 // Returns: 0 - success,1 - failure
 //**************************************************************************************
 using namespace std;
+//******************************((funcs))***********************************************
+void Job::Jprint(){
+    if (this->status == "stopped"){
+        cout <<"["<<job_id<<"]"<<command<<":"<<pid<< " " << difftime(time(NULL), elp_sec)<<"secs"<<" (Stopped)"<< endl;
+        }
+    else{
+        cout <<"["<<job_id<<"]"<<command<<":"<<pid<< " " << difftime(time(NULL), elp_sec)<<"secs"<< endl;
+    }
+}
 
 //**************************************************************************************
 static char OLDPWD[MAX_LINE_SIZE];
@@ -39,12 +48,13 @@ int ExeCmd( char* lineSize, char* cmdString)
             Job job;
             job.pid = getpid();
             job.job_id = jobs_counter++;
-            //job.elp_sec = time();
+            job.elp_sec = time(NULL);
             //job.command ='';
             jobs.push_back(job);
             break;
         }
         args[1]++;
+        
     }
 /*************************************************/
 // Built in Commands PLEASE NOTE NOT ALL REQUIRED
@@ -88,13 +98,13 @@ int ExeCmd( char* lineSize, char* cmdString)
 	/*************************************************/
 	else if (!strcmp(cmd, "pwd")) 
 	{
-       /* (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
+        (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
          if(!illegal_cmd)
           {
             char curr_dir[MAX_LINE_SIZE];
             getcwd(curr_dir, MAX_LINE_SIZE);
             cout << curr_dir << endl;
-          }*/
+          }
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "diff"))
@@ -136,21 +146,12 @@ int ExeCmd( char* lineSize, char* cmdString)
 	
 	else if (!strcmp(cmd, "jobs")) 
 	{
-        for(vector<Job>::iterator   it = jobs.begin();
-            it != jobs.end();
-            it++ )
-        {
-            it->print();
-
-        }
-        /*
-        vector<Job>::iterator it;
+        vector<Job>::iterator it =jobs.begin ;
         it=jobs.begin();
-        while(it =! jobs.end()) {
-            it->print();
+        while(it != jobs.end) {
+            it->Jprint();
             it++;
         }
-*/
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "showpid"))
@@ -174,7 +175,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                 for(vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++)
                 {
                     if(it->pid == *args[1]){
-                        it->print();
+                        it->Jprint();
                         do {
                             w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
                             if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
