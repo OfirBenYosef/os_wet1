@@ -43,7 +43,8 @@ int ExeCmd( char* lineSize, char* cmdString)
 			num_arg++; 
  
 	}
-    while(args[1]){
+
+   /* while(args[1]){
         if(args[1] == "&" || args[2] =="&"){
             Job job;
             job.pid = getpid();
@@ -54,8 +55,10 @@ int ExeCmd( char* lineSize, char* cmdString)
             break;
         }
         args[1]++;
+
         
-    }
+    }*/
+
 /*************************************************/
 // Built in Commands PLEASE NOTE NOT ALL REQUIRED
 // ARE IN THIS CHAIN OF IF COMMANDS. PLEASE ADD
@@ -63,37 +66,42 @@ int ExeCmd( char* lineSize, char* cmdString)
 /*************************************************/
 	if (!strcmp(cmd, "cd") ) 
 	{
-		(num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
         if(num_arg > 1){
-        	illegal_cmd = true;
-           cout << "smash error: cd: too many arguments" << endl;
-        }
-        else{
+             illegal_cmd = true;
+            cout << "smash error: cd: too many arguments" << endl;
+         }
+        else if(num_arg == 1){
             illegal_cmd = false;
-        }
-            if(!illegal_cmd)
-              {
-                char curr_dir[MAX_LINE_SIZE];
-                if(args[1] == "-"){
-                    if(!OLDPWD){
-                        cout << "smash error: cd:" << OLDPWD <<"not set" <<endl;
-                    }
-                    else{
-                    	strcpy(curr_dir, OLDPWD);
-                        getcwd(OLDPWD, MAX_LINE_SIZE);
-                        chdir(curr_dir);
-                        cout << curr_dir << endl;
-                    }
+            char curr_dir[MAX_LINE_SIZE];
+            if(!strcmp(args[1],"-")){
+                if(!OLDPWD){
+                    cout << "smash error: cd:" << "OLDPWD" <<"not set" <<endl;
                 }
                 else{
-                    getcwd(curr_dir, MAX_LINE_SIZE);
-                    strcat(curr_dir,(const char*) args[1]);
-                    chdir(curr_dir);
-                    cout << curr_dir << endl;
+                    strcpy(curr_dir, OLDPWD);
+                    getcwd(OLDPWD, MAX_LINE_SIZE);
+                    if(chdir(curr_dir) == -1){
+                        cout << "smash error: cd:" << OLDPWD <<" not set" <<endl;
+                    }
+                    else{
+                        cout << getcwd(curr_dir, MAX_LINE_SIZE)  << endl;
+                    }
+                   
                 }
-               
-              }
-	} 
+            }
+            else{
+                getcwd(curr_dir, MAX_LINE_SIZE);
+                if(chdir(args[1]) == -1){
+                    cout << "smash error: cd:" << OLDPWD <<" not set" <<endl;
+                }
+                else  {
+                    cout << getcwd(curr_dir, MAX_LINE_SIZE)  << endl;
+                }
+               // strcpy(OLDPWD,curr_dir);
+            }
+        }
+        
+    }
 	
 	/*************************************************/
 	else if (!strcmp(cmd, "pwd")) 
@@ -122,7 +130,7 @@ int ExeCmd( char* lineSize, char* cmdString)
 			 char ch2 = getc(file2);
 			 while (ch1 != EOF && ch2 != EOF){
 				 if (ch1 != ch2){
-					 cout << "1"<< endl; 
+					 cout << "1" << endl;
 					 break;
 				 }
 				 ch1 = getc(file1);
@@ -131,7 +139,7 @@ int ExeCmd( char* lineSize, char* cmdString)
 			 if (ch1 == EOF && ch2 == EOF){
 				 cout << "0"<< endl;
 			 }
-			 else cout << "1"<< endl;
+			 //else cout << "1"<< endl;
 			        
 		   }
 	}
@@ -143,12 +151,10 @@ int ExeCmd( char* lineSize, char* cmdString)
  		
 	}
 	/*************************************************/
-	
 	else if (!strcmp(cmd, "jobs")) 
 	{
-        vector<Job>::iterator it =jobs.begin ;
-        it=jobs.begin();
-        while(it != jobs.end) {
+        vector<Job>::iterator it =jobs.begin();
+        while(it != jobs.end()) {
             it->Jprint();
             it++;
         }
@@ -175,7 +181,6 @@ int ExeCmd( char* lineSize, char* cmdString)
                 for(vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++)
                 {
                     if(it->pid == *args[1]){
-                        it->Jprint();
                         do {
                             w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
                             if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
