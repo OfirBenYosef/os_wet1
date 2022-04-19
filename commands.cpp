@@ -10,7 +10,7 @@
 using namespace std;
 //******************************((funcs))***********************************************
 void Job::Jprint(){
-    if (this->status == "stopped"){
+    if (!strcmp(this->status, "stopped")){
         cout <<"["<<job_id<<"]"<<command<<":"<<pid<< " " << difftime(time(NULL), elp_sec)<<"secs"<<" (Stopped)"<< endl;
         }
     else{
@@ -19,7 +19,7 @@ void Job::Jprint(){
 }
 
 //**************************************************************************************
-static char OLDPWD[MAX_LINE_SIZE];
+char OLDPWD[MAX_LINE_SIZE];
 static unsigned int jobs_counter = 1;
 
 int ExeCmd( char* lineSize, char* cmdString)
@@ -27,7 +27,7 @@ int ExeCmd( char* lineSize, char* cmdString)
 	char* cmd;
 	char* args[MAX_ARG];
 	char pwd[MAX_LINE_SIZE];
-	char* delimiters = " \t\n";  
+	char delimiters[4] = " \t\n";
 	int i = 0, num_arg = 0;
     pid_t w;
     int status;
@@ -44,21 +44,6 @@ int ExeCmd( char* lineSize, char* cmdString)
  
 	}
 
-   /* while(args[1]){
-        if(args[1] == "&" || args[2] =="&"){
-            Job job;
-            job.pid = getpid();
-            job.job_id = jobs_counter++;
-            job.elp_sec = time(NULL);
-            //job.command ='';
-            jobs.push_back(job);
-            break;
-        }
-        args[1]++;
-
-        
-    }*/
-
 /*************************************************/
 // Built in Commands PLEASE NOTE NOT ALL REQUIRED
 // ARE IN THIS CHAIN OF IF COMMANDS. PLEASE ADD
@@ -66,41 +51,46 @@ int ExeCmd( char* lineSize, char* cmdString)
 /*************************************************/
 	if (!strcmp(cmd, "cd") ) 
 	{
-        if(num_arg > 1){
-             illegal_cmd = true;
-            cout << "smash error: cd: too many arguments" << endl;
-         }
-        else if(num_arg == 1){
-            illegal_cmd = false;
-            char curr_dir[MAX_LINE_SIZE];
-            if(!strcmp(args[1],"-")){
-                if(!OLDPWD){
-                    cout << "smash error: cd:" << "OLDPWD" <<"not set" <<endl;
+                if (num_arg != 1)
+                {
+                    illegal_cmd = true;
+                    perror( "smash error: cd: too many arguments");
                 }
-                else{
-                    strcpy(curr_dir, OLDPWD);
-                    getcwd(OLDPWD, MAX_LINE_SIZE);
-                    if(chdir(curr_dir) == -1){
-                        cout << "smash error: cd:" << OLDPWD <<" not set" <<endl;
+                if (!strcmp(args[1], "-"))
+                {
+                    illegal_cmd = false;
+                    if (OLDPWD[0] != 0)
+                    {
+                        char curr_dir[MAX_LINE_SIZE];
+                        if (getcwd(curr_dir, MAX_LINE_SIZE) == NULL)
+                        {
+                            perror("smash error: ");
+                            return 1;
+                        }
+                        if (chdir(OLDPWD) == -1)
+                        {
+                            perror("smash error: cd: OLDPWD not set");
+                            return 1;
+                        }
+                        strcpy(OLDPWD, curr_dir);
                     }
-                    else{
-                        cout << getcwd(curr_dir, MAX_LINE_SIZE)  << endl;
+
+                }
+                else
+                {
+                    char curr_dir[MAX_LINE_SIZE];
+                    if (getcwd(curr_dir, MAX_LINE_SIZE) == NULL)
+                    {
+                        perror("smash error: ");
+                        return 1;
                     }
-                   
+                    if (chdir(args[1]) == -1)
+                    {
+                        cout << "smash error: cd:" << args[1] <<" not set" <<endl;
+                        return 1;
+                    }
+                    strcpy(OLDPWD, curr_dir);
                 }
-            }
-            else{
-                getcwd(curr_dir, MAX_LINE_SIZE);
-                if(chdir(args[1]) == -1){
-                    cout << "smash error: cd:" << OLDPWD <<" not set" <<endl;
-                }
-                else  {
-                    cout << getcwd(curr_dir, MAX_LINE_SIZE)  << endl;
-                }
-               // strcpy(OLDPWD,curr_dir);
-            }
-        }
-        
     }
 	
 	/*************************************************/
@@ -318,7 +308,7 @@ int BgCmd(char* lineSize)
 {
 
 	char* Command;
-	char* delimiters = " \t\n";
+	char delimiters[4] = " \t\n";
 	char *args[MAX_ARG];
 	if (lineSize[strlen(lineSize)-2] == '&')
 	{
