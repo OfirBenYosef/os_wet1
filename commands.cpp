@@ -16,6 +16,13 @@ void Job::Jprint(){
     else{
         cout <<"["<<job_id<<"]"<<command<<":"<<pid<< " " << difftime(time(NULL), elp_sec)<<"secs"<< endl;
     }
+};
+Job::Job(unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status){
+            this->pid = pid;
+            this->job_id = job_id;
+            this->elp_sec = elp_sec;
+            strcpy(this->command,command);
+            strcpy(this->status,status);
 }
 
 //**************************************************************************************
@@ -255,28 +262,27 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString)
     	switch(pID = fork()) 
 	{
     		case -1: 
-					// Add your code here (error)
-					
-					/* 
-					your code
-					*/
+            perror("smash error: > fork has failed");
+            exit(1);
         	case 0 :
                 	// Child Process
                		setpgrp();
-					
-			        // Add your code here (execute an external command)
-					
-					/* 
-					your code
-					*/
-			
-        default:;
-                	// Add your code here
-					
-					/* 
-					your code
-					*/
+                    //
+                    execvp(args[0], args);
+                    perror("smash error: > couldn't run external command");
+                    exit(1);
+        default:
+            int pross_status;
+            // Add your code here
+            Job fg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],"FRONT");
+            jobs.push_back(fg_command);
+            int wait_result = waitpid(pID, &pross_status, WSTOPPED); //wait for the proccess to end.
+            if (wait_result == -1 && WIFSTOPPED(pross_status)) {
+                perror("smash error: > wait has failed");
+                return;
+            }
 	}
+    return;
 }
 //**************************************************************************************
 // function name: ExeComp
@@ -312,14 +318,42 @@ int BgCmd(char* lineSize)
 	char *args[MAX_ARG];
 	if (lineSize[strlen(lineSize)-2] == '&')
 	{
+        
 		lineSize[strlen(lineSize)-2] = '\0';
-		// Add your code here (execute a in the background)
-					
-		/* 
-		your code
-		*/
-		
-	}
-	return -1;
+        Command = strtok(lineSize, delimiters);
+        if (Command == NULL){
+            return 0;
+        }
+        for (int i = 1; i < MAX_ARG; i++)
+        {
+            args[i] = strtok(NULL, delimiters);
+        }
+        if ((!strcmp(Command, "diff")) || (!strcmp(Command, "kill")) || (!strcmp(Command, "quit")) || (!strcmp(Command, "fg")) || (!strcmp(Command, "bg")) || (!strcmp(Command, "showpid"))
+            || (!strcmp(Command, "pwd")) || (!strcmp(Command, "jobs")) || (!strcmp(Command, "cd")))
+        {
+            perror("smash error: > can't run built-in commands in bg");
+            return 0;
+        }
+        else{
+            int pID;
+            switch (pID = fork())
+            {
+            case -1:
+                perror("smash error: > ");
+                exit(1);
+            case 0:
+                // Child Process - implement difference between path and local file
+                setpgrp();
+                execvp(args[0], args);
+                perror("smash error: > ");
+                exit(1);
+            default:
+                Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],"BACK");
+                jobs.push_back(bg_command);
+                return 0;
+            }
+        }
+        return -1;
+    }
 }
 

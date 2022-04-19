@@ -24,6 +24,7 @@ class Job{
         char* command;
         char* status;
         void Jprint();
+        Job(unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status);
 };
 
 
