@@ -11,17 +11,19 @@ using namespace std;
 //******************************((funcs))***********************************************
 void Job::Jprint(){
     if (!strcmp(this->status, "stopped")){
-        cout <<"["<<job_id<<"]"<<command<<":"<<pid<< " " << difftime(time(NULL), elp_sec)<<"secs"<<" (Stopped)"<< endl;
+        cout <<"["<<job_id<<"]"<<command<<" : "<<pid<< " " << difftime(time(NULL), elp_sec)<<" secs"<<" (Stopped)"<< endl;
         }
     else{
-        cout <<"["<<job_id<<"]"<<command<<":"<<pid<< " " << difftime(time(NULL), elp_sec)<<"secs"<< endl;
+        cout <<"["<<job_id<<"]"<<command<<" : "<<pid<< " " << difftime(time(NULL), elp_sec)<<" secs"<< endl;
     }
 };
+
+
 Job::Job(unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status){
             this->pid = pid;
             this->job_id = job_id;
             this->elp_sec = elp_sec;
-            strcpy(this->command,command);
+            strcpy(this->command,(char*)command);
             strcpy(this->status,status);
 }
 
@@ -174,10 +176,14 @@ int ExeCmd( char* lineSize, char* cmdString)
         }
         else{
             if(num_arg == 1){
+                if(!jobs.size()){
+                    cout << "smash error: fg:job-id " << *args[1]<< " does not exist"<< endl;
+
+                }
                 int i = 0;
                 for(vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++)
                 {
-                    if(it->pid == *args[1]){
+                    if(it->job_id+48== (int)*args[1]){
                         do {
                             w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
                             if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
@@ -193,10 +199,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                                 printf("continued\n");
                             }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-                        exit(EXIT_SUCCESS);
                         jobs.erase(it);
                         break;
                     }
+                }
+                if(!(it <= jobs.end())){
+                    cout << "smash error: fg:job-id " << *args[1] << " does not exist" << endl;
                 }
             }
 
@@ -206,6 +214,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                     }
                     else{
                         it = jobs.end();
+                        it--;
                         do {
                             w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
                             if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
@@ -220,8 +229,8 @@ int ExeCmd( char* lineSize, char* cmdString)
                                 printf("continued\n");
                             }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-                        exit(EXIT_SUCCESS);
-                        jobs.erase(jobs.end());
+                        //exit(EXIT_SUCCESS);
+                        jobs.erase(it);
                     }
             }
 
@@ -230,7 +239,52 @@ int ExeCmd( char* lineSize, char* cmdString)
 	/*************************************************/
 	else if (!strcmp(cmd, "bg")) 
 	{
-  		
+        vector<Job>::iterator it;
+        if(num_arg > 1){ //maybe need to add more conditions
+            cout << "smash error: bg: invalid arguments" << endl;
+        }
+        else {
+            if (num_arg == 1) {
+                if (!jobs.size()) {
+                    cout << "smash error: fg:job-id " << *args[1] << " does not exist" << endl;
+                }
+                int i = 0;
+                for (vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++) {
+                    if (it->job_id + 48 == (int) *args[1]) {
+                        if (!strcmp(it->status, "(stopped)")) {
+                            it->status = "";
+                        } else {
+                            cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
+                                 << endl;
+                        }
+                        break;
+                    }
+
+                }
+                if (!(it <= jobs.end())) {
+                    cout << "smash error: bg:job-id " << *args[1] << " does not exist" << endl;
+                }
+            }
+            else if (num_arg == 0) {
+                it = jobs.end();
+                it--;
+                jobs.erase(it);
+                for (vector<Job>::iterator it = jobs.end(); it != jobs.begin();) {
+                    it--;
+                    if (!strcmp(it->status, "(stopped)")) {
+                        it->status = "";
+                        break;
+                    } else {
+                        cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
+                             << endl;
+                        break;
+                    }
+                }
+                if (!(it >= jobs.begin())) {
+                    cout << "smash error: bg:there are no stopped jobs to resume" << endl;
+                }
+            }
+        }
 	}
 	/*************************************************/
 	else if (!strcmp(cmd, "quit"))
@@ -313,7 +367,8 @@ int ExeComp(char* lineSize)
 int BgCmd(char* lineSize)
 {
 
-	char* Command;
+	char* Command=(char*)malloc(80*sizeof(char));
+    char* Com=(char*)malloc(80*sizeof(char));
 	char delimiters[4] = " \t\n";
 	char *args[MAX_ARG];
 	if (lineSize[strlen(lineSize)-2] == '&')
@@ -348,8 +403,15 @@ int BgCmd(char* lineSize)
                 perror("smash error: > ");
                 exit(1);
             default:
-                Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],"BACK");
+                //cout << *args[1]    << endl;
+                //cout << *args[2]    << endl;
+                strcpy(Com,args[1]);
+                Command=strcat(strcat(Command," "),Com);
+                Command=strcat(Command," &");
+                Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,"BACK");
+
                 jobs.push_back(bg_command);
+
                 return 0;
             }
         }

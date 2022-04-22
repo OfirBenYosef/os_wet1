@@ -21,8 +21,8 @@ class Job{
         unsigned int pid;
         unsigned int job_id;
         unsigned int elp_sec;
-        char* command;
-        char* status;
+        char* command=(char*)malloc(80*sizeof(char));
+        char* status=(char*)malloc(80*sizeof(char));
         void Jprint();
         Job(unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status);
 };
