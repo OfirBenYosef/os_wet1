@@ -4,11 +4,14 @@
 #include <sys/wait.h>
 #include <unistd.h> 
 #include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include "commands.h"
 
-
+void ctrl_C_sig_handler(int signal_num);
+void ctrl_Z_sig_handler(int signal_num);
 
 #endif
 

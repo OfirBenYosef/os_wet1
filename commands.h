@@ -21,19 +21,25 @@ class Job{
         unsigned int pid;
         unsigned int job_id;
         unsigned int elp_sec;
-        char* command=(char*)malloc(80*sizeof(char));
-        char* status=(char*)malloc(80*sizeof(char));
+        //char* command=(char*)malloc(80*sizeof(char));
+        //char* status=(char*)malloc(80*sizeof(char));
+        char command[MAX_LINE_SIZE];
+        char status[MAX_LINE_SIZE];
         void Jprint();
         Job(unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status);
+        Job();
 };
 
 
 extern std::vector<Job> jobs;
+extern Job fg_job;
 //********************************************************************
 //typedef enum  { FALSE , TRUE }; bool;
 int ExeComp(char* lineSize);
 int BgCmd(char* lineSize);
 int ExeCmd(char* lineSize, char* cmdString);
 void ExeExternal(char *args[MAX_ARG], char* cmdString);
+void change_fg_job(Job fg,unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status);
+int delete_finished_jobs();
 #endif
 
