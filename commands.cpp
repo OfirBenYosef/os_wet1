@@ -59,6 +59,7 @@ int ExeCmd( char* lineSize, char* cmdString)
 	int i = 0, num_arg = 0;
     pid_t w;
     int status;
+    delete_finished_jobs();
 	bool illegal_cmd = FALSE; // illegal command
     	cmd = strtok(lineSize, delimiters);
     
@@ -86,7 +87,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                     illegal_cmd = true;
                     perror( "smash error: cd: too many arguments");
                 }
-                if (!strcmp(args[1], "-"))
+                else if (!strcmp(args[1], "-"))
                 {
                     illegal_cmd = false;
                     if (OLDPWD[0] != 0)
@@ -393,6 +394,7 @@ int ExeComp(char* lineSize)
 //**************************************************************************************
 int BgCmd(char* lineSize)
 {
+    delete_finished_jobs();
 
 	char* Command = (char*)malloc(80*sizeof(char));
     char* Com = (char*)malloc(80*sizeof(char));
@@ -449,17 +451,14 @@ int BgCmd(char* lineSize)
 
 int delete_finished_jobs()
 {
-    if (jobs.empty()) return 0;
+    if (jobs.empty()){
+        return 0;
+    }
     int stat_val;
     for (unsigned int i = 0; i < jobs.size(); i++)
     {
         int wait_result = waitpid(jobs[i].pid, &stat_val, WNOHANG | WUNTRACED | WCONTINUED);
-        if (wait_result == -1)
-        {
-            perror("smash error: > ");
-            return 1;
-        }
-        else if (wait_result!=0 && (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
+        if (wait_result == -1 && (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
         {
             jobs.erase(jobs.begin() + i);
         }
