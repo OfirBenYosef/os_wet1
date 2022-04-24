@@ -32,7 +32,7 @@ class Job{
 
 
 extern std::vector<Job> jobs;
-extern Job fg_job;
+
 //********************************************************************
 //typedef enum  { FALSE , TRUE }; bool;
 int ExeComp(char* lineSize);

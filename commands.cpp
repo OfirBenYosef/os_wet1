@@ -356,7 +356,8 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString)
             int pross_status;
             // Add your code here
            //  fg_job(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],"FRONT");
-            change_fg_job(fg_job,pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],"FRONT");
+             char front[MAX_LINE_SIZE] ="FRONT";
+            change_fg_job(fg_job,pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],front);
            // jobs.push_back(fg_command);
             int wait_result = waitpid(pID, &pross_status, WSTOPPED); //wait for the proccess to end.
             if (wait_result == -1 && WIFSTOPPED(pross_status)) {
@@ -403,7 +404,6 @@ int BgCmd(char* lineSize)
     //delete_finished_jobs();
 	if (lineSize[strlen(lineSize)-2] == '&')
 	{
-        
 		lineSize[strlen(lineSize)-2] = '\0';
         Command = strtok(lineSize, delimiters);
         if (Command == NULL){
@@ -438,7 +438,8 @@ int BgCmd(char* lineSize)
                 strcpy(Com,args[1]);
                 Command=strcat(strcat(Command," "),Com);
                 Command=strcat(Command," &");
-                Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,"BACK");
+                char back[MAX_LINE_SIZE] = "BACK";
+                Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,back);
 
                 jobs.push_back(bg_command);
 
@@ -447,6 +448,7 @@ int BgCmd(char* lineSize)
         }
         return -1;
     }
+    return 0;
 }
 
 int delete_finished_jobs()

@@ -12,6 +12,7 @@
 
 void ctrl_C_sig_handler(int signal_num);
 void ctrl_Z_sig_handler(int signal_num);
+extern Job fg_job;
 
 #endif
 

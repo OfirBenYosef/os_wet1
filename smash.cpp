@@ -1,4 +1,4 @@
-/*	smash.c
+/*	smash.cpp
 main file. This file contains the main function of smash
 *******************************************************************/
 #include <sys/types.h>
@@ -8,6 +8,7 @@ main file. This file contains the main function of smash
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <iostream>
 #include "commands.h"
 #include "signals.h"
 #include <vector>
@@ -36,7 +37,17 @@ int main(int argc, char *argv[])
 	/* add your code here */
 
 	/************************************/
-
+    struct sigaction sig_s = { { 0 } };
+    sig_s.sa_handler = &ctrl_C_sig_handler;
+    if (sigaction(SIGINT, &sig_s, NULL) == -1) // if ctrl C is cought
+    {
+        perror("smash error: > ");
+    }
+    sig_s.sa_handler = &ctrl_Z_sig_handler;
+    if (sigaction(SIGTSTP, &sig_s, NULL) == -1) // if ctrl Z is cought
+    {
+        perror("smash error: > ");
+    }
 	/************************************/
 	// Init globals 
 
