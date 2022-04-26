@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	/* add your code here */
 
 	/************************************/
-    struct sigaction sig_s = { { 0 } };
+   struct sigaction sig_s = { { 0 } };
     sig_s.sa_handler = &ctrl_C_sig_handler;
     if (sigaction(SIGINT, &sig_s, NULL) == -1) // if ctrl C is cought
     {
