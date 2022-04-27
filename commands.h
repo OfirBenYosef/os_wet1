@@ -20,7 +20,7 @@
 #define MAX_ARG 20
 #define TRUE 1
 #define FALSE 0
-#define _XOPEN_SOURCE_EXTENDED 1
+//#define _XOPEN_SOURCE_EXTENDED 1
 
 //************************************************************************
 

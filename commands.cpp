@@ -340,20 +340,36 @@ int ExeCmd( char* lineSize, char* cmdString)
                 if (!jobs.size()) {
                     cout << "smash error: fg:job-id " << *args[1] << " does not exist" << endl;
                 }
-                int i = 0;
-                for (vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++) {
-                    if (it->job_id + 48 == (int) *args[1]) {
-                        if (!strcmp(it->status, "(stopped)")) {
-                           strcpy( it->status ,"");
-                        } else {
-                            cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
-                                 << endl;
+                else{
+                    int i = 0;
+                    for (vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++) {
+                        
+                        if (it->job_id + 48 == (int) *args[1]) {
+                            if (it->stop) {
+                                strcpy( it->status ,"");
+                                it->stop = false;
+                                it->Jprint();
+                                int kill_result = kill(it->pid, SIGCONT); // continue the proccess.
+
+                                if (kill_result == -1)
+                                {
+                                    perror("smash error: >  kill has failed");
+                                    return 1;
+                                }
+                                jobs.erase(it);
+                               // break;
+                            }
+                            else {
+                                cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
+                                     << endl;
+                            }
+                            return 0;
                         }
-                        return 0;
                     }
+                    
+                        cout << "smash error: bg:job-id " << *args[1] << " does not exist" << endl;
                 }
-                
-                    cout << "smash error: bg:job-id " << *args[1] << " does not exist" << endl;
+
                 
             }
             else if (num_arg == 0) {
@@ -362,8 +378,19 @@ int ExeCmd( char* lineSize, char* cmdString)
                 jobs.erase(it);
                 for (vector<Job>::iterator it = jobs.end(); it != jobs.begin();) {
                     it--;
-                    if (!strcmp(it->status, "(stopped)")) {
+                    if (it->stop) {
                         strcpy( it->status ,"");
+                        it->stop = false;
+                        it->Jprint();
+                        int kill_result = kill(it->pid, SIGCONT); // continue the proccess.
+
+                        if (kill_result == -1)
+                        {
+                            perror("smash error: >  kill has failed");
+                            return 1;
+                        }
+                        jobs.erase(it);
+                       // break;
                         return 0;
                     }
                     else {
@@ -378,7 +405,7 @@ int ExeCmd( char* lineSize, char* cmdString)
             }
         }
         //delete_finished_jobs();
-return 0;
+        return 0;
     }
 
     /*************************************************/
@@ -511,8 +538,8 @@ int BgCmd(char* lineSize)
 
 {
 
-    char* Command=new char[MAX_LINE_SIZE];
-    char* Com=new char[MAX_LINE_SIZE];
+    char* Command = new char[MAX_LINE_SIZE];
+    char* Com = new char[MAX_LINE_SIZE];
 
     char delimiters[4] = " \t\n";
     char *args[MAX_ARG];
@@ -538,20 +565,21 @@ int BgCmd(char* lineSize)
             return 0;
         }
         else{
-            pid_t pID;
-            switch (pID = fork())
+            pid_t pID = fork();
+           // cout << "pid: " <<pID<<endl;
+           /* switch (pID)
             {
             case -1:
                 perror("smash error: > ");
-		delete[] Com;
+                delete[] Com;
                 delete[] Command;
                 exit(1);
             case 0:
                 // Child Process - implement difference between path and local file
                 setpgrp();
-                execvp(args[0], args);
+                cout<<"exec = "<<execvp(args[0], args)<<endl;
                 perror("smash error: > ");
-		delete[] Com;
+                delete[] Com;
                 delete[] Command;	
                 exit(1);
             
@@ -570,13 +598,48 @@ int BgCmd(char* lineSize)
                     bg_command.stop = false;
                 jobs.push_back(bg_command);
                 
-		//delete[] bg_command;
+               //delete[] bg_command;
                delete[] Com;
-               //delete[] Command;
-		
-        
-                return 0;
+               //delete[] Command;*/
+            if(pID < 0){
+                perror("smash error: > ");
+                delete[] Com;
+                delete[] Command;
+                exit(1);
             }
+            else if( pID == 0){
+                //cout << "pid == 0" <<endl;
+                // Child Process - implement difference between path and local file
+                setpgrp();
+                if(execvp(args[0], args) == -1){
+                perror("smash error: > ");
+                delete[] Com;
+                delete[] Command;
+                exit(1);
+                }
+            }
+            else{
+                //cout << "pid > 0" <<endl;
+                strcpy(Com,args[1]);
+                Command = strcat(strcat(Command," "),Com);
+                Command = strcat(Command," &");
+                char back[MAX_LINE_SIZE] = "BACK";
+                //Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,back,false);
+                    Job bg_command;
+                    bg_command.pid = pID;
+                    bg_command.job_id = jobs_counter++;
+                    bg_command.elp_sec = static_cast<unsigned int>(time(NULL));
+                    strcpy(bg_command.command,Command);
+                    strcpy(bg_command.status,"BACK");
+                    bg_command.stop = false;
+                    jobs.push_back(bg_command);
+                   //delete[] bg_command;
+                    delete[] Com;
+                  //delete[] Command;
+            }
+
+                return 0;
+        //}
         }
         delete[] Com;
        // delete[] Command;
