@@ -12,6 +12,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
+#include<iostream>
+#include<iterator> // for iterators
 
 //*************************(( defines ))**********************************
 #define MAX_LINE_SIZE 80

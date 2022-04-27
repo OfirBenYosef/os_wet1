@@ -46,6 +46,8 @@ Job::Job(){
 
 
 
+
+
 void change_fg_job(Job &fg,unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status,bool stop){
     fg.pid = pid;
     fg.job_id = job_id;
@@ -248,7 +250,9 @@ int ExeCmd( char* lineSize, char* cmdString)
 
     {
         //delete_finished_jobs();
-        vector<Job>::iterator it;
+        vector<Job>::iterator ptr ;
+	
+
 
         if(num_arg > 1){ //maybe need to add more conditions
 
@@ -264,13 +268,13 @@ int ExeCmd( char* lineSize, char* cmdString)
                     cout << "smash error: fg:job-id " << *args[1]<< " does not exist"<< endl;
                 }
                 int i = 0;
-                for(vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++)
+                for(vector<Job>::iterator ptr = jobs.begin(); ptr != jobs.end(); ptr++)
                 {
-                    if(it->job_id+48== (int)*args[1]){
+                    if(ptr->job_id+48== (int)*args[1]){
                         do {
-                            w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
+                            w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
 
-                        //    if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
+                            if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
 
                             if (WIFEXITED(status)) {
                                 printf("exited, status=%d\n", WEXITSTATUS(status));
@@ -282,25 +286,26 @@ int ExeCmd( char* lineSize, char* cmdString)
                                 printf("continued\n");
                             }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-                        jobs.erase(it);
-                        break;
+                        jobs.erase(ptr);
+                        return 0;
                     }
                 }
-                if(!(it <= jobs.end())){
+
+                
                     cout << "smash error: fg:job-id " << *args[1] << " does not exist" << endl;
-                }
+                
             }
             else if(num_arg == 0){
                     if(!jobs.size()) {
                         cout << "smash error: fg: jobs list is empty" << endl;
                     }
                     else{
-                        it = jobs.end();
-                        it--;
+                        ptr = jobs.end();
+                        ptr--;
                         do {
-                            w = waitpid((pid_t)it->pid, &status, WUNTRACED | WCONTINUED);
+                            w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
 
-                       //     if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
+                       	    if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
                             if (WIFEXITED(status)) {
                                 printf("exited, status=%d\n", WEXITSTATUS(status));
                             } else if (WIFSIGNALED(status)) {
@@ -312,11 +317,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                             }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
                         //exit(EXIT_SUCCESS);
-                        jobs.erase(it);
+                        jobs.erase(ptr);
                     }
             }
         }
-        delete_finished_jobs();
+        //delete_finished_jobs();
+	return 0;
     }
 
     /*************************************************/
@@ -343,12 +349,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                             cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
                                  << endl;
                         }
-                        break;
+                        return 0;
                     }
                 }
-                if (!(it <= jobs.end())) {
+                
                     cout << "smash error: bg:job-id " << *args[1] << " does not exist" << endl;
-                }
+                
             }
             else if (num_arg == 0) {
                 it = jobs.end();
@@ -358,20 +364,21 @@ int ExeCmd( char* lineSize, char* cmdString)
                     it--;
                     if (!strcmp(it->status, "(stopped)")) {
                         strcpy( it->status ,"");
-                        break;
+                        return 0;
                     }
                     else {
                         cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
                              << endl;
-                        break;
+                        return 0;
                     }
                 }
-                if (!(it >= jobs.begin())) {
+              
                     cout << "smash error: bg:there are no stopped jobs to resume" << endl;
-                }
+                
             }
         }
-        delete_finished_jobs();
+        //delete_finished_jobs();
+return 0;
     }
 
     /*************************************************/
@@ -503,18 +510,19 @@ int ExeComp(char* lineSize)
 int BgCmd(char* lineSize)
 
 {
-    //cout << lineSize << endl;
-    //delete_finished_jobs();
-    char* Command = (char*)malloc(80*sizeof(char));
-    char* Com = (char*)malloc(80*sizeof(char));
+
+    char* Command=new char[MAX_LINE_SIZE];
+    char* Com=new char[MAX_LINE_SIZE];
 
     char delimiters[4] = " \t\n";
     char *args[MAX_ARG];
-    if (lineSize[strlen(lineSize)-2] == '&')
+    if (lineSize[(int)strlen(lineSize)-2] == '&')
     {
-        lineSize[strlen(lineSize)-2] = '\0';
+        lineSize[(int)strlen(lineSize)-2] = '\0';
         Command = strtok(lineSize, delimiters);
         if (Command == NULL){
+		delete[] Com;
+              //delete[] Command;
             return 0;
         }
         for (int i = 1; i < MAX_ARG; i++)
@@ -525,6 +533,8 @@ int BgCmd(char* lineSize)
             || (!strcmp(Command, "pwd")) || (!strcmp(Command, "jobs")) || (!strcmp(Command, "cd")))
         {
             perror("smash error: > can't run built-in commands in bg");
+		delete[] Com;
+               delete[] Command;
             return 0;
         }
         else{
@@ -533,30 +543,47 @@ int BgCmd(char* lineSize)
             {
             case -1:
                 perror("smash error: > ");
+		delete[] Com;
+                delete[] Command;
                 exit(1);
             case 0:
                 // Child Process - implement difference between path and local file
                 setpgrp();
                 execvp(args[0], args);
                 perror("smash error: > ");
+		delete[] Com;
+                delete[] Command;	
                 exit(1);
-            default:
-                //cout << *args[1]    << endl;
-
-                //cout << *args[2]    << endl;
+            
+	default:   
                 strcpy(Com,args[1]);
                 Command = strcat(strcat(Command," "),Com);
                 Command = strcat(Command," &");
                 char back[MAX_LINE_SIZE] = "BACK";
-                Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,back,false);
+                //Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,back,false);
+		Job bg_command;
+                    bg_command.pid = pID;
+                    bg_command.job_id = jobs_counter++;
+                    bg_command.elp_sec = static_cast<unsigned int>(time(NULL));
+                    strcpy(bg_command.command,Command);
+                    strcpy(bg_command.status,"BACK");
+                    bg_command.stop = false;
                 jobs.push_back(bg_command);
+                
+		//delete[] bg_command;
+               delete[] Com;
+               //delete[] Command;
+		
         
                 return 0;
             }
         }
-        return -1;
+        delete[] Com;
+       // delete[] Command;
+	return -1;
     }
-
+	delete[] Com;
+        //delete[] Command;	
     return 1;
 }
 int delete_finished_jobs()
@@ -581,20 +608,21 @@ int delete_finished_jobs()
         }
     }
     return 0;*/
+
     if (jobs.empty()) return 0;
     int stat_val;
     for (unsigned int i = 0; i < jobs.size(); i++)
     {
-        int wait_result = waitpid(jobs[i].pid, &stat_val, WNOHANG|WUNTRACED);
+        int wait_result = waitpid((pid_t)jobs[i].pid, &stat_val, WNOHANG);
         cout<<"wait_result = "<< wait_result<<endl;
         if (wait_result == -1)
         {
             perror("smash error: > ");
            // return 1;
         }
-        else if (wait_result > 0 && (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
+        else if (wait_result > 0) //&& (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
         {
-           // jobs.erase(jobs.begin() + i);
+            jobs.erase(jobs.begin() + i);
             cout<<"delete pid = "<< jobs[i].pid <<endl;
         }
     }
