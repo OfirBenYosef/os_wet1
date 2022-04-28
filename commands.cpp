@@ -240,73 +240,68 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "fg"))
 
     {
-        vector<Job>::iterator ptr ;
-	
-        if(num_arg > 1){ //maybe need to add more conditions
-
-            //cout << "smash error: f" << endl;
+        vector<Job>::iterator ptr;
+        if(num_arg > 1){
             perror("smash error: fg: invalid arguments");
-            return -1;
+            illegal_cmd = true;
         }
-
-        else{
-
+        else {
             if(num_arg == 1){
-                if(!jobs.size()){
-                    cout << "smash error: fg:job-id " << *args[1]<< " does not exist"<< endl;
-                }
-                int i = 0;
-                for(vector<Job>::iterator ptr = jobs.begin(); ptr != jobs.end(); ptr++)
-                {
-                    if(ptr->job_id+48== (int)*args[1]){
-                        fg_job.pid = ptr->pid;
-                        fg_job.job_id = ptr->job_id;
-                        fg_job.elp_sec = ptr->elp_sec;
-                        strcpy(fg_job.command,ptr->command);
-                        strcpy(fg_job.status,"FRONT");
-                        fg_job.stop = false;
-                        do {
-                            w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
-
-                            if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
-                        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-                        jobs.erase(ptr);
-                        return 0;
+                for(vector<Job>::iterator ptr = jobs.begin(); ptr != jobs.end(); ptr++){
+                   
+                    if(ptr->job_id == atoi(args[1])){
+                        illegal_cmd = false;
+                        break;
                     }
+                    illegal_cmd = true;
                 }
-
-                
-                    cout << "smash error: fg:job-id " << *args[1] << " does not exist" << endl;
-                
+                if(illegal_cmd){
+                    cout << "smash error: fg:job-id " << args[1]<< " does not exist"<< endl;
+                }
             }
             else if(num_arg == 0){
-                    if(!jobs.size()) {
-                        cout << "smash error: fg: jobs list is empty" << endl;
-                    }
-                    else{
-                        ptr = jobs.end();
-                        ptr--;
-                        fg_job.pid = ptr->pid;
-                        fg_job.job_id = ptr->job_id;
-                        fg_job.elp_sec = ptr->elp_sec;
-                        strcpy(fg_job.command,ptr->command);
-                        strcpy(fg_job.status,"FRONT");
-                        fg_job.stop = false;
-                        pid_t pID = ptr->pid;
-                        
-                       do {
-                            w = waitpid(pID, &status, WUNTRACED | WCONTINUED);
-
-                           if (w == -1) { break;}//perror("waitpid"); exit(EXIT_FAILURE); }
-                        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-                        //exit(EXIT_SUCCESS);
-                        jobs.erase(ptr);
-                        
-                        
-                    }
+                if(!jobs.size()) {
+                    perror("smash error: fg: jobs list is empty");
+                    illegal_cmd = true;
+                }
+                else{
+                    ptr = jobs.end();
+                    ptr--;
+                    illegal_cmd = false;
+                }
             }
+            
+            if(!illegal_cmd){
+                fg_job.pid = ptr->pid;
+                fg_job.job_id = ptr->job_id;
+                fg_job.elp_sec = ptr->elp_sec;
+                strcpy(fg_job.command,ptr->command);
+                strcpy(fg_job.status,"FRONT");
+                fg_job.stop = false;
+                
+                pid_t pID = ptr->pid;
+                int val_stat;
+                int wait_result = waitpid(pID, &val_stat, WSTOPPED);
+                if (wait_result == -1 && WIFSTOPPED(val_stat))
+                {
+                    perror("smash error: > wait has failed");
+                    return 1;
+                }
+                if (wait_result > 0 && WIFEXITED(val_stat))
+                {
+                    jobs.erase(ptr);
+                    fg_job.pid = 0;
+                    fg_job.job_id = 0;
+                    fg_job.elp_sec = 0;
+                    strcpy(fg_job.command," ");
+                    strcpy(fg_job.status," ");
+                    fg_job.stop = false;
+                }
+            }
+
         }
-	return 0;
+
+        
     }
 
     /*************************************************/
@@ -339,7 +334,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                                     perror("smash error: >  kill has failed");
                                     return 1;
                                 }
-                                jobs.erase(it);
+                                //jobs.erase(it);
                                // break;
                             }
                             else {
@@ -372,7 +367,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                             perror("smash error: >  kill has failed");
                             return 1;
                         }
-                        jobs.erase(it);
+                       // jobs.erase(it);
                        // break;
                         return 0;
                     }

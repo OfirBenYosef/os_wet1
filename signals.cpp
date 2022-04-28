@@ -29,7 +29,7 @@ void ctrl_C_sig_handler(int signal_num)
 void ctrl_Z_sig_handler(int signal_num)
 {
     cout<< "caught ctrl-Z" <<endl;
-    int job_to_stop = jobs_counter;
+    int job_to_stop = 0;
     if (fg_job.pid == 0 ){
         return;
     }
@@ -38,16 +38,21 @@ void ctrl_Z_sig_handler(int signal_num)
             perror("smash error:");
             return;
         }
-        fg_job.job_id == 0 ? jobs_counter++ : fg_job.job_id;
-        fg_job.stop=true;
-        strcpy(fg_job.status,"stopped");
-        int pos_in_jobs;
-        for(int i = 0; i<jobs.size();i++){
-            if(fg_job.job_id >= jobs[i].job_id){
-                pos_in_jobs = i;
+        if(fg_job.job_id == 0){
+            fg_job.job_id = jobs_counter;
+            fg_job.stop = true;
+            strcpy(fg_job.status,"stopped");
+            jobs.push_back(fg_job);
+        }
+        else{
+            for(int i = 0; i<jobs.size();i++){
+                if(fg_job.job_id == jobs[i].job_id){
+                    jobs[i].stop = true;
+                    strcpy(jobs[i].status,"stopped");
+                    break;
+                }
             }
         }
-        jobs.insert(jobs.begin()+ pos_in_jobs,fg_job);
         cout << "smash: process <"<< fg_job.pid <<" > was stopped" <<endl;
         fg_job.pid = 0;
         fg_job.job_id = 0;
@@ -55,6 +60,7 @@ void ctrl_Z_sig_handler(int signal_num)
         strcpy(fg_job.command," ");
         strcpy(fg_job.status," ");
         fg_job.stop = false;
+        jobs_counter++;
         }
     return;
 }
