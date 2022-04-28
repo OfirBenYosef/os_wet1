@@ -61,6 +61,7 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString);
 void change_fg_job(Job fg,unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command,char* status,bool stop);
 
 int delete_finished_jobs();
+bool is_string_digits(char* string, int start_index = 0);
 extern int jobs_counter;
 
 #endif

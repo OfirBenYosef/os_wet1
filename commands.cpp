@@ -88,7 +88,7 @@ int ExeCmd( char* lineSize, char* cmdString)
         if (args[i] != NULL)
             num_arg++;
     }
-    //delete_finished_jobs();
+    delete_finished_jobs();
 /*************************************************/
 
 // Built in Commands PLEASE NOTE NOT ALL REQUIRED
@@ -102,7 +102,6 @@ int ExeCmd( char* lineSize, char* cmdString)
     if (!strcmp(cmd, "cd") )
 
     {
-        //delete_finished_jobs();
                 if (num_arg != 1)
                 {
                     illegal_cmd = true;
@@ -144,7 +143,6 @@ int ExeCmd( char* lineSize, char* cmdString)
                     }
                     strcpy(OLDPWD, curr_dir);
                 }
-        delete_finished_jobs();
     }
     /*************************************************/
 
@@ -161,7 +159,6 @@ int ExeCmd( char* lineSize, char* cmdString)
             getcwd(curr_dir, MAX_LINE_SIZE);
             cout << curr_dir << endl;
           }
-        delete_finished_jobs();
     }
 
     /*************************************************/
@@ -169,7 +166,6 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "diff"))
 
     {
-        //delete_finished_jobs();
           (num_arg != 2)? (illegal_cmd = true) : (illegal_cmd = false);
            if(!illegal_cmd)
            {
@@ -199,7 +195,6 @@ int ExeCmd( char* lineSize, char* cmdString)
              }
              //else cout << "1"<< endl;
            }
-        delete_finished_jobs();
     }
 
     /*************************************************/
@@ -221,13 +216,11 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "jobs"))
 
     {
-        //delete_finished_jobs();
         vector<Job>::iterator it =jobs.begin();
         while(it != jobs.end()) {
             it->Jprint();
             it++;
         }
-        delete_finished_jobs();
     }
 
     /*************************************************/
@@ -235,13 +228,11 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "showpid"))
 
     {
-       // delete_finished_jobs();
         (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
         if (!illegal_cmd)
         {
             cout << "smash pid is " << getpid() << endl;
         }
-        delete_finished_jobs();
     }
     
     /*************************************************/
@@ -249,16 +240,13 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "fg"))
 
     {
-        //delete_finished_jobs();
         vector<Job>::iterator ptr ;
 	
-
-
         if(num_arg > 1){ //maybe need to add more conditions
 
-            cout << "smash error: fg: invalid arguments" << endl;
-            //perror("smash error:");
-           // return -1;
+            //cout << "smash error: f" << endl;
+            perror("smash error: fg: invalid arguments");
+            return -1;
         }
 
         else{
@@ -275,16 +263,6 @@ int ExeCmd( char* lineSize, char* cmdString)
                             w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
 
                             if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
-
-                            if (WIFEXITED(status)) {
-                                printf("exited, status=%d\n", WEXITSTATUS(status));
-                            } else if (WIFSIGNALED(status)) {
-                                printf("killed by signal %d\n", WTERMSIG(status));
-                            } else if (WIFSTOPPED(status)) {
-                                printf("stopped by signal %d\n", WSTOPSIG(status));
-                            } else if (WIFCONTINUED(status)) {
-                                printf("continued\n");
-                            }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
                         jobs.erase(ptr);
                         return 0;
@@ -306,22 +284,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                             w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
 
                        	    if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
-                            if (WIFEXITED(status)) {
-                                printf("exited, status=%d\n", WEXITSTATUS(status));
-                            } else if (WIFSIGNALED(status)) {
-                                printf("killed by signal %d\n", WTERMSIG(status));
-                            } else if (WIFSTOPPED(status)) {
-                                printf("stopped by signal %d\n", WSTOPSIG(status));
-                            } else if (WIFCONTINUED(status)) {
-                                printf("continued\n");
-                            }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
                         //exit(EXIT_SUCCESS);
                         jobs.erase(ptr);
                     }
             }
         }
-        //delete_finished_jobs();
 	return 0;
     }
 
@@ -330,7 +298,6 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "bg"))
 
     {
-        //delete_finished_jobs();
         vector<Job>::iterator it;
         if(num_arg > 1){ //maybe need to add more conditions
             cout << "smash error: bg: invalid arguments" << endl;
@@ -381,7 +348,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                     if (it->stop) {
                         strcpy( it->status ,"");
                         it->stop = false;
-                        it->Jprint();
+                        
                         int kill_result = kill(it->pid, SIGCONT); // continue the proccess.
 
                         if (kill_result == -1)
@@ -404,7 +371,6 @@ int ExeCmd( char* lineSize, char* cmdString)
                 
             }
         }
-        //delete_finished_jobs();
         return 0;
     }
 
@@ -413,8 +379,81 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "quit"))
 
     {
-        delete_finished_jobs();
+       if(num_arg == 1 && !strcmp(args[1], "kill")){
+            //send SIGTERM to all job in jobs
+           vector<Job>::iterator it_k = jobs.begin();
+           for (; it_k != jobs.end(); it_k++){
+               cout << "[" << it_k->job_id << "] " << it_k->command << " - Sending SIGTERM... ";
+               if (kill(it_k->pid, SIGTERM) == -1) {
+                   perror("smash error: >  kill has failed");
+                   return 1;
+               }
+               else{
+                   int kill_start_time = time(NULL);
+                   int wait = 0;
+                   while (difftime(time(NULL), kill_start_time) < 5) {
+                       wait = waitpid(it_k->pid, NULL, WNOHANG);
+                       if (wait == -1) {
+                           perror("smash error: >  wait has failed");
+                           return 1;
+                       }
+                       else if (wait > 0) {
+                           break;
+                       }
+                       else {
+                           continue;
+                       }
+                   }
+                   if(wait == 0){
+                       if (kill(it_k->pid, SIGKILL) == -1) {
+                           perror("smash error: >  kill has failed");
+                           return 1;
+                       }
+                       else{
+                           cout << "(5 sec passed) Sending SIGKILL... Done." <<endl;
+                       }
+                   }
+                   else{
+                       cout << "Done." <<endl;
+                   }
+                   
+               }
+            }
+        }
+       vector<Job>::iterator it = jobs.begin();
+       for (; it != jobs.end(); it++){
+            jobs.erase(it);
+        }
+       return 0;
            
+    }
+    else if (!strcmp(cmd, "kill"))
+
+    {
+        if(num_arg !=2 || args[1][0] != '-' || !is_string_digits(args[1], 1) || !is_string_digits(args[2])){
+            perror("smash error: kill: invalid arguments");
+            illegal_cmd = true;
+        }
+        else{
+            int signum = atoi(args[1] + 1);
+            //cout << "signum " << signum <<endl;
+            vector<Job>::iterator it = jobs.begin();
+           for (; it != jobs.end(); it++){
+                if (it->job_id == atoi(args[2]))
+                {
+                    cout << "signal " << signum << " was sent to pid " << it->pid << endl;
+                    if (kill(it->pid, signum) == -1)
+                    {
+                        cout << "smash error: > kill " << args[2] << " - cannot send signal" << endl;
+                        return 1;
+                    }
+                    return 0;
+                }
+
+            }
+            cout << "smash error: kill: job-id <" << atoi(args[2]) << "> does not exist" <<endl;
+        }
+        return 1;
 
     }
 
@@ -429,7 +468,6 @@ int ExeCmd( char* lineSize, char* cmdString)
     if (illegal_cmd == TRUE)
     {
         printf("smash error: > \"%s\"\n", cmdString);
-        delete_finished_jobs();
         return 1;
     }
     return 0;
@@ -450,7 +488,6 @@ int ExeCmd( char* lineSize, char* cmdString)
 void ExeExternal(char *args[MAX_ARG], char* cmdString)
 
 {
-    //delete_finished_jobs();
        pid_t pID;
         switch(pID = fork())
     {
@@ -476,7 +513,7 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString)
             fg_job.pid = pID;
             fg_job.job_id = 0;
             fg_job.elp_sec = static_cast<unsigned int>(time(NULL));
-            strcpy(fg_job.command,(char*)args[0]);
+            strcpy(fg_job.command,cmdString);
             strcpy(fg_job.status,front);
             fg_job.stop = false;
             int wait_result = waitpid(pID, &pross_status, WSTOPPED); //wait for the proccess to end.
@@ -537,7 +574,7 @@ int ExeComp(char* lineSize)
 int BgCmd(char* lineSize)
 
 {
-
+    delete_finished_jobs();
     char* Command = new char[MAX_LINE_SIZE];
     char* Com = new char[MAX_LINE_SIZE];
 
@@ -547,6 +584,7 @@ int BgCmd(char* lineSize)
     {
         lineSize[(int)strlen(lineSize)-2] = '\0';
         Command = strtok(lineSize, delimiters);
+       // cout << "Command:" <<Command <<endl;
         if (Command == NULL){
 		delete[] Com;
               //delete[] Command;
@@ -555,52 +593,19 @@ int BgCmd(char* lineSize)
         for (int i = 1; i < MAX_ARG; i++)
         {
             args[i] = strtok(NULL, delimiters);
+        
         }
+        args[0] = Command;
         if ((!strcmp(Command, "diff")) || (!strcmp(Command, "kill")) || (!strcmp(Command, "quit")) || (!strcmp(Command, "fg")) || (!strcmp(Command, "bg")) || (!strcmp(Command, "showpid"))
             || (!strcmp(Command, "pwd")) || (!strcmp(Command, "jobs")) || (!strcmp(Command, "cd")))
         {
             perror("smash error: > can't run built-in commands in bg");
-		delete[] Com;
+               delete[] Com;
                delete[] Command;
-            return 0;
+               return 0;
         }
         else{
             pid_t pID = fork();
-           // cout << "pid: " <<pID<<endl;
-           /* switch (pID)
-            {
-            case -1:
-                perror("smash error: > ");
-                delete[] Com;
-                delete[] Command;
-                exit(1);
-            case 0:
-                // Child Process - implement difference between path and local file
-                setpgrp();
-                cout<<"exec = "<<execvp(args[0], args)<<endl;
-                perror("smash error: > ");
-                delete[] Com;
-                delete[] Command;	
-                exit(1);
-            
-	default:   
-                strcpy(Com,args[1]);
-                Command = strcat(strcat(Command," "),Com);
-                Command = strcat(Command," &");
-                char back[MAX_LINE_SIZE] = "BACK";
-                //Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,back,false);
-		Job bg_command;
-                    bg_command.pid = pID;
-                    bg_command.job_id = jobs_counter++;
-                    bg_command.elp_sec = static_cast<unsigned int>(time(NULL));
-                    strcpy(bg_command.command,Command);
-                    strcpy(bg_command.status,"BACK");
-                    bg_command.stop = false;
-                jobs.push_back(bg_command);
-                
-               //delete[] bg_command;
-               delete[] Com;
-               //delete[] Command;*/
             if(pID < 0){
                 perror("smash error: > ");
                 delete[] Com;
@@ -651,44 +656,34 @@ int BgCmd(char* lineSize)
 }
 int delete_finished_jobs()
 {
-
-   /* if (jobs.empty()){
-        return 0;
-    }
-    int stat_val;
-    for (unsigned int i = 0; i < jobs.size(); i++)
-    {
-       // pid_t wait_result = waitpid(jobs[i].pid, &stat_val, WNOHANG | WUNTRACED | WCONTINUED);
-        pid_t wait_result = waitpid(jobs[i].pid, &stat_val,  WNOHANG | WUNTRACED | WCONTINUED);
-        //cout<<"jobs[i].pid "<<jobs[i].pid<<endl;
-        cout<<"wait_result = "<< wait_result<<endl;
-        if ((wait_result  0) && (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
-        {
-        cout<<"delete pid = "<< jobs[i].pid <<endl;
-
-            jobs.erase(jobs.begin() + i);
-
-        }
-    }
-    return 0;*/
-
     if (jobs.empty()) return 0;
     int stat_val;
     for (unsigned int i = 0; i < jobs.size(); i++)
     {
         int wait_result = waitpid((pid_t)jobs[i].pid, &stat_val, WNOHANG);
-        cout<<"wait_result = "<< wait_result<<endl;
         if (wait_result == -1)
         {
             perror("smash error: > ");
-           // return 1;
+            return 1;
         }
-        else if (wait_result > 0) //&& (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
+        else if ((wait_result > 0) && (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
         {
-            jobs.erase(jobs.begin() + i);
-            cout<<"delete pid = "<< jobs[i].pid <<endl;
+            jobs.erase(jobs.begin() + i);//
+            
         }
     }
     return 0;
 
+}
+bool is_string_digits(char* string, int start_index)
+{
+    int index = start_index;
+    while (string[index])
+    {
+        if (string[index] < '0' || string[index] > '9') {
+            return false;
+        }
+        index++;
+    }
+    return true;
 }
