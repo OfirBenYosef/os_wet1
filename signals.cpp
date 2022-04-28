@@ -38,10 +38,16 @@ void ctrl_Z_sig_handler(int signal_num)
             perror("smash error:");
             return;
         }
-        fg_job.job_id=jobs_counter++;
+        fg_job.job_id == 0 ? jobs_counter++ : fg_job.job_id;
         fg_job.stop=true;
-        jobs.push_back(fg_job);
-        strcpy(jobs[job_to_stop+1].status,"stopped");
+        strcpy(fg_job.status,"stopped");
+        int pos_in_jobs;
+        for(int i = 0; i<jobs.size();i++){
+            if(fg_job.job_id >= jobs[i].job_id){
+                pos_in_jobs = i;
+            }
+        }
+        jobs.insert(jobs.begin()+ pos_in_jobs,fg_job);
         cout << "smash: process <"<< fg_job.pid <<" > was stopped" <<endl;
         fg_job.pid = 0;
         fg_job.job_id = 0;

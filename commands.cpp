@@ -259,6 +259,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                 for(vector<Job>::iterator ptr = jobs.begin(); ptr != jobs.end(); ptr++)
                 {
                     if(ptr->job_id+48== (int)*args[1]){
+                        fg_job.pid = ptr->pid;
+                        fg_job.job_id = ptr->job_id;
+                        fg_job.elp_sec = ptr->elp_sec;
+                        strcpy(fg_job.command,ptr->command);
+                        strcpy(fg_job.status,"FRONT");
+                        fg_job.stop = false;
                         do {
                             w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
 
@@ -280,13 +286,23 @@ int ExeCmd( char* lineSize, char* cmdString)
                     else{
                         ptr = jobs.end();
                         ptr--;
-                        do {
-                            w = waitpid((pid_t)ptr->pid, &status, WUNTRACED | WCONTINUED);
+                        fg_job.pid = ptr->pid;
+                        fg_job.job_id = ptr->job_id;
+                        fg_job.elp_sec = ptr->elp_sec;
+                        strcpy(fg_job.command,ptr->command);
+                        strcpy(fg_job.status,"FRONT");
+                        fg_job.stop = false;
+                        pid_t pID = ptr->pid;
+                        
+                       do {
+                            w = waitpid(pID, &status, WUNTRACED | WCONTINUED);
 
-                       	    if (w == -1) { perror("waitpid"); exit(EXIT_FAILURE); }
+                           if (w == -1) { break;}//perror("waitpid"); exit(EXIT_FAILURE); }
                         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
                         //exit(EXIT_SUCCESS);
                         jobs.erase(ptr);
+                        
+                        
                     }
             }
         }
