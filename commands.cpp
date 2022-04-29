@@ -247,7 +247,7 @@ int ExeCmd( char* lineSize, char* cmdString)
         }
         else {
             if(num_arg == 1){
-                for(vector<Job>::iterator ptr = jobs.begin(); ptr != jobs.end(); ptr++){
+                for(ptr = jobs.begin(); ptr != jobs.end(); ptr++){
                    
                     if(ptr->job_id == atoi(args[1])){
                         illegal_cmd = false;
@@ -278,7 +278,6 @@ int ExeCmd( char* lineSize, char* cmdString)
                 strcpy(fg_job.command,ptr->command);
                 strcpy(fg_job.status,"FRONT");
                 fg_job.stop = false;
-                
                 pid_t pID = ptr->pid;
                 int val_stat;
                 int wait_result = waitpid(pID, &val_stat, WSTOPPED);
