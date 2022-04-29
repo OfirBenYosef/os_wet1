@@ -107,7 +107,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                     illegal_cmd = true;
                     perror( "smash error: cd: too many arguments");
                 }
-                if (!strcmp(args[1], "-"))
+               else if (!strcmp(args[1], "-"))
                 {
                     illegal_cmd = false;
                     if (OLDPWD[0] != 0)
@@ -264,9 +264,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                     perror("smash error: fg: jobs list is empty");
                     illegal_cmd = true;
                 }
-                else{
+                else{ 
                     ptr = jobs.end();
-                    ptr--;
+		    ptr--;
+		    while(ptr->stop){
+			ptr--;
+		    }
                     illegal_cmd = false;
                 }
             }
@@ -310,12 +313,14 @@ int ExeCmd( char* lineSize, char* cmdString)
     {
         vector<Job>::iterator it;
         if(num_arg > 1){ //maybe need to add more conditions
-            cout << "smash error: bg: invalid arguments" << endl;
+            perror( "smash error: bg: invalid arguments");
+	     illegal_cmd = false;
         }
         else {
             if (num_arg == 1) {
                 if (!jobs.size()) {
-                    cout << "smash error: fg:job-id " << *args[1] << " does not exist" << endl;
+ 		  illegal_cmd = false;
+
                 }
                 else{
                     int i = 0;
@@ -333,8 +338,6 @@ int ExeCmd( char* lineSize, char* cmdString)
                                     perror("smash error: >  kill has failed");
                                     return 1;
                                 }
-                                //jobs.erase(it);
-                               // break;
                             }
                             else {
                                 cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
@@ -343,16 +346,12 @@ int ExeCmd( char* lineSize, char* cmdString)
                             return 0;
                         }
                     }
-                    
                         cout << "smash error: bg:job-id " << *args[1] << " does not exist" << endl;
                 }
 
                 
             }
             else if (num_arg == 0) {
-                it = jobs.end();
-                it--;
-                jobs.erase(it);
                 for (vector<Job>::iterator it = jobs.end(); it != jobs.begin();) {
                     it--;
                     if (it->stop) {
@@ -366,19 +365,13 @@ int ExeCmd( char* lineSize, char* cmdString)
                             perror("smash error: >  kill has failed");
                             return 1;
                         }
-                       // jobs.erase(it);
-                       // break;
+           
                         return 0;
                     }
-                    else {
-                        cout << "smash error: bg:job-id " << it->job_id << " is already running in the background"
-                             << endl;
-                        return 0;
-                    }
+                 
                 }
               
-                    cout << "smash error: bg:there are no stopped jobs to resume" << endl;
-                
+                    cout << "smash error: bg:there are no stopped jobs to resume" << endl;               
             }
         }
         return 0;
@@ -394,6 +387,7 @@ int ExeCmd( char* lineSize, char* cmdString)
            vector<Job>::iterator it_k = jobs.begin();
            for (; it_k != jobs.end(); it_k++){
                cout << "[" << it_k->job_id << "] " << it_k->command << " - Sending SIGTERM... ";
+		fflush(stdout);
                if (kill(it_k->pid, SIGTERM) == -1) {
                    perror("smash error: >  kill has failed");
                    return 1;
@@ -431,10 +425,15 @@ int ExeCmd( char* lineSize, char* cmdString)
             }
         }
        vector<Job>::iterator it = jobs.begin();
-       for (; it != jobs.end(); it++){
+
+	 for(int i = 0; i<jobs.size();i++){
+                jobs.erase(jobs.begin() + i);                     
+         }
+	
+       /*for (; it != jobs.end(); it++){
             jobs.erase(it);
-        }
-       return 0;
+        }*/
+       exit(0);
            
     }
     else if (!strcmp(cmd, "kill"))

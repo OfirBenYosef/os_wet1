@@ -43,6 +43,7 @@ void ctrl_Z_sig_handler(int signal_num)
             fg_job.stop = true;
             strcpy(fg_job.status,"stopped");
             jobs.push_back(fg_job);
+	    jobs_counter++;
         }
         else{
             for(int i = 0; i<jobs.size();i++){
@@ -60,7 +61,6 @@ void ctrl_Z_sig_handler(int signal_num)
         strcpy(fg_job.command," ");
         strcpy(fg_job.status," ");
         fg_job.stop = false;
-        jobs_counter++;
         }
     return;
 }
