@@ -17,7 +17,6 @@ void Job::Jprint(){
         cout <<"["<<job_id<<"]"<<command<<" : "<< pid << " " << difftime(time(NULL), elp_sec)<<" secs"<<" (Stopped)"<< endl;
         }
    else if (!stop){
-   // else{
         cout <<"["<<job_id<<"]"<<command<<" : "<< pid << " " << difftime(time(NULL), elp_sec)<<" secs"<< endl;
    }
 };
@@ -126,6 +125,10 @@ int ExeCmd( char* lineSize, char* cmdString)
                         }
                         strcpy(OLDPWD, curr_dir);
                     }
+                    else{
+                        illegal_cmd = true;
+                        perror("smash error: cd: OLDPWD not set");
+                    }
                 }
                 else
                 {
@@ -149,7 +152,6 @@ int ExeCmd( char* lineSize, char* cmdString)
     else if (!strcmp(cmd, "pwd"))
 
     {
-        //delete_finished_jobs();
         (num_arg != 0)? (illegal_cmd = true) : (illegal_cmd = false);
 
          if(!illegal_cmd)
@@ -174,9 +176,6 @@ int ExeCmd( char* lineSize, char* cmdString)
              FILE *file2 = fopen(args[2],"r");
 
              if (file1 == NULL || file2 == NULL){
-
-                 //printf("Error : Files not open");
-                 //exit(0);
                  perror("smash error:");
                  return -1;
              }
@@ -193,7 +192,6 @@ int ExeCmd( char* lineSize, char* cmdString)
              if (ch1 == EOF && ch2 == EOF){
                  cout << "0"<< endl;
              }
-             //else cout << "1"<< endl;
            }
     }
 
@@ -429,10 +427,6 @@ int ExeCmd( char* lineSize, char* cmdString)
 	 for(int i = 0; i<jobs.size();i++){
                 jobs.erase(jobs.begin() + i);                     
          }
-	
-       /*for (; it != jobs.end(); it++){
-            jobs.erase(it);
-        }*/
        exit(0);
            
     }
@@ -445,7 +439,6 @@ int ExeCmd( char* lineSize, char* cmdString)
         }
         else{
             int signum = atoi(args[1] + 1);
-            //cout << "signum " << signum <<endl;
             vector<Job>::iterator it = jobs.begin();
            for (; it != jobs.end(); it++){
                 if (it->job_id == atoi(args[2]))
@@ -474,10 +467,10 @@ int ExeCmd( char* lineSize, char* cmdString)
          delete_finished_jobs();
          return 0;
     }
-    if (illegal_cmd == TRUE)
+    if (illegal_cmd == true)
     {
         printf("smash error: > \"%s\"\n", cmdString);
-        return 1;
+        return -1;
     }
     return 0;
 }
@@ -514,11 +507,7 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString)
             exit(1);
         default:
             int pross_status;
-            // Add your code here
-           //  fg_job(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),args[0],"FRONT");
-             char front[MAX_LINE_SIZE] ="FRONT";
-          //  change_fg_job(fg_job,pID,0,static_cast<unsigned int>(time(NULL)),args[0],"FRONT",false);
-           // jobs.push_back(fg_command);
+            char front[MAX_LINE_SIZE] ="FRONT";
             fg_job.pid = pID;
             fg_job.job_id = 0;
             fg_job.elp_sec = static_cast<unsigned int>(time(NULL));
@@ -622,7 +611,6 @@ int BgCmd(char* lineSize)
                 exit(1);
             }
             else if( pID == 0){
-                //cout << "pid == 0" <<endl;
                 // Child Process - implement difference between path and local file
                 setpgrp();
                 if(execvp(args[0], args) == -1){
@@ -633,12 +621,10 @@ int BgCmd(char* lineSize)
                 }
             }
             else{
-                //cout << "pid > 0" <<endl;
                 strcpy(Com,args[1]);
                 Command = strcat(strcat(Command," "),Com);
                 Command = strcat(Command," &");
                 char back[MAX_LINE_SIZE] = "BACK";
-                //Job bg_command(pID,jobs_counter++,static_cast<unsigned int>(time(NULL)),Command,back,false);
                     Job bg_command;
                     bg_command.pid = pID;
                     bg_command.job_id = jobs_counter++;
@@ -647,20 +633,16 @@ int BgCmd(char* lineSize)
                     strcpy(bg_command.status,"BACK");
                     bg_command.stop = false;
                     jobs.push_back(bg_command);
-                   //delete[] bg_command;
                     delete[] Com;
-                  //delete[] Command;
             }
 
                 return 0;
         //}
         }
         delete[] Com;
-       // delete[] Command;
 	return -1;
     }
 	delete[] Com;
-        //delete[] Command;	
     return 1;
 }
 int delete_finished_jobs()
@@ -677,7 +659,7 @@ int delete_finished_jobs()
         }
         else if ((wait_result > 0) && (WIFEXITED(stat_val) || WIFSIGNALED(stat_val)))
         {
-            jobs.erase(jobs.begin() + i);//
+            jobs.erase(jobs.begin() + i);
             
         }
     }
