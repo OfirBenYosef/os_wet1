@@ -4,6 +4,7 @@ CFLAGS = -std=c++11 -Wall -Werror -pedantic-errors -DNDEBUG
 CCLINK = $(CXX)
 OBJS = smash.o commands.o signals.o
 RM = rm -f
+TARGET=smash
 # Creating the  executable
 smash: $(OBJS)
 	$(CCLINK) -o smash $(OBJS)

@@ -19,7 +19,7 @@ void Job::Jprint(){
    else if (!stop){
         cout <<"["<<job_id<<"]"<<command<<" : "<< pid << " " << difftime(time(NULL), elp_sec)<<" secs"<< endl;
    }
-};
+}
 
 
 
@@ -32,7 +32,7 @@ Job::Job(unsigned int pid,unsigned int job_id,unsigned int elp_sec,char* command
             strcpy(this->command,(char*)command);
             strcpy(this->status,status);
             this->stop = stop;
-};
+}
 
 Job::Job(){
          this->pid = 0;
@@ -41,7 +41,7 @@ Job::Job(){
          strcpy(this->command," ");
          strcpy(this->status," ");
          this->stop = false;
-};
+}
 
 
 
@@ -71,11 +71,8 @@ int ExeCmd( char* lineSize, char* cmdString)
 {
     char* cmd;
     char* args[MAX_ARG];
-    char pwd[MAX_LINE_SIZE];
     char delimiters[4] = " \t\n";
     int i = 0, num_arg = 0;
-    pid_t w;
-    int status;
     bool illegal_cmd = FALSE; // illegal command
     cmd = strtok(lineSize, delimiters);
     if (cmd == NULL)
@@ -128,6 +125,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                     else{
                         illegal_cmd = true;
                         perror("smash error: cd: OLDPWD not set");
+				return -1;
                     }
                 }
                 else
@@ -247,7 +245,7 @@ int ExeCmd( char* lineSize, char* cmdString)
             if(num_arg == 1){
                 for(ptr = jobs.begin(); ptr != jobs.end(); ptr++){
                    
-                    if(ptr->job_id == atoi(args[1])){
+                    if(ptr->job_id == (unsigned int)atoi(args[1])){
                         illegal_cmd = false;
                         break;
                     }
@@ -261,6 +259,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                 if(!jobs.size()) {
                     perror("smash error: fg: jobs list is empty");
                     illegal_cmd = true;
+			return -1;
                 }
                 else{ 
                     ptr = jobs.end();
@@ -285,7 +284,7 @@ int ExeCmd( char* lineSize, char* cmdString)
                 if (wait_result == -1 && WIFSTOPPED(val_stat))
                 {
                     perror("smash error: > wait has failed");
-                    return 1;
+                    return -1;
                 }
                 if (wait_result > 0 && WIFEXITED(val_stat))
                 {
@@ -321,10 +320,9 @@ int ExeCmd( char* lineSize, char* cmdString)
 
                 }
                 else{
-                    int i = 0;
                     for (vector<Job>::iterator it = jobs.begin(); it != jobs.end(); it++) {
                         
-                        if (it->job_id + 48 == (int) *args[1]) {
+                        if (it->job_id + 48 == (unsigned int) *args[1]) {
                             if (it->stop) {
                                 strcpy( it->status ,"");
                                 it->stop = false;
@@ -424,7 +422,7 @@ int ExeCmd( char* lineSize, char* cmdString)
         }
        vector<Job>::iterator it = jobs.begin();
 
-	 for(int i = 0; i<jobs.size();i++){
+	 for(unsigned int i = 0; i<jobs.size();i++){
                 jobs.erase(jobs.begin() + i);                     
          }
        exit(0);
@@ -441,7 +439,7 @@ int ExeCmd( char* lineSize, char* cmdString)
             int signum = atoi(args[1] + 1);
             vector<Job>::iterator it = jobs.begin();
            for (; it != jobs.end(); it++){
-                if (it->job_id == atoi(args[2]))
+                if (it->job_id == (unsigned int)atoi(args[2]))
                 {
                     cout << "signal " << signum << " was sent to pid " << it->pid << endl;
                     if (kill(it->pid, signum) == -1)
@@ -538,8 +536,8 @@ void ExeExternal(char *args[MAX_ARG], char* cmdString)
 int ExeComp(char* lineSize)
 
 {
-    char ExtCmd[MAX_LINE_SIZE+2];
-    char *args[MAX_ARG];
+    
+    
     if ((strstr(lineSize, "|")) || (strstr(lineSize, "<")) || (strstr(lineSize, ">")) || (strstr(lineSize, "*")) || (strstr(lineSize, "?")) || (strstr(lineSize, ">>")) || (strstr(lineSize, "|&")))
     {
 
@@ -624,7 +622,6 @@ int BgCmd(char* lineSize)
                 strcpy(Com,args[1]);
                 Command = strcat(strcat(Command," "),Com);
                 Command = strcat(Command," &");
-                char back[MAX_LINE_SIZE] = "BACK";
                     Job bg_command;
                     bg_command.pid = pID;
                     bg_command.job_id = jobs_counter++;

@@ -1,6 +1,0 @@
-# ninja log v5
-1310	1391	1650657964918441890	os_wet1	8118abd9d882edc4
-0	309	1650996444011626000	build.ninja	c7f17d819ab5aedd
-4	184	1650632791118570955	CMakeFiles/os_wet1.dir/signals.cpp.o	d37319a9bc63d4f0
-9	1310	1650657964832659879	CMakeFiles/os_wet1.dir/commands.cpp.o	f268d13e2e505ce3
-8	1196	1650657964715629799	CMakeFiles/os_wet1.dir/smash.cpp.o	cdf687e70f7c01bc

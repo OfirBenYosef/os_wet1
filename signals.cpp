@@ -29,7 +29,6 @@ void ctrl_C_sig_handler(int signal_num)
 void ctrl_Z_sig_handler(int signal_num)
 {
     cout<< "caught ctrl-Z" <<endl;
-    int job_to_stop = 0;
     if (fg_job.pid == 0 ){
         return;
     }
@@ -46,7 +45,7 @@ void ctrl_Z_sig_handler(int signal_num)
 	    jobs_counter++;
         }
         else{
-            for(int i = 0; i<jobs.size();i++){
+            for(unsigned int i = 0; i<jobs.size();i++){
                 if(fg_job.job_id == jobs[i].job_id){
                     jobs[i].stop = true;
                     strcpy(jobs[i].status,"stopped");
